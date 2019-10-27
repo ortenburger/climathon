@@ -1,9 +1,13 @@
-#include <Wire.h>
-#include <SPI.h>
+#include <Arduino.h>
+#include "painlessMesh.h"
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-#include <ArduinoJson.h>
 #include <BH1750.h>
+#include <Wire.h>
+// #include <SPI.h>
 
 #include "painlessMesh.h"
 #include <ESP8266WiFi.h>
@@ -78,14 +82,16 @@ void setup() {
   mesh.onNewConnection(&newConnectionCallback);
   mesh.onChangedConnections(&changedConnectionCallback);
   mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
+  mesh.setRoot(false);
+  mesh.setContainsRoot(true);
 
   userScheduler.addTask( taskReadSensors );
   taskReadSensors.enable();
   client.setServer(MQTT_BROKER, MQTT_BROKER_PORT);
-  delay(5000);
+  delay(500);
   if(client.connect("sensor7")) {
     Serial.println("Connected");
-    client.publish("/mvuanzuri", "connected");
+    client.publish("/mvuanzuri/sensor7", "connected");
   }
 }
 
@@ -100,7 +106,7 @@ void readSensors() {
   if (!client.connected()) {
     if(client.connect("sensor7")) {
       Serial.println("Connected");
-      client.publish("/mvuanzuri", "connected");
+      client.publish("/mvuanzuri/sensor7", "connected");
     }
   }
 
@@ -115,7 +121,7 @@ void readSensors() {
     doc["altitude"]    = altitude;
     doc["lightlevel"]  = lightlevel;
     serializeJson(doc, json);
-    client.publish("/mvuanzuri", json.c_str());
+    client.publish("/mvuanzuri/sensor7/values", json.c_str());
   }
 }
 
